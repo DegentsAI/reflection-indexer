@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: envio-indexer
+networks:
+- id: 59144
+  start_block: 0
+  contracts:
+  - name: reflection
+    address:
+    - 0x9Dd4a2A1dB6bc1168de7D758208AbB109d9A386A
+    handler: src/EventHandlers.ts
+    events:
+    - event: Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)
+    - event: ApprovalForAll(address indexed owner, address indexed operator, bool approved)
+    - event: BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)
+    - event: Initialized(uint64 version)
+    - event: MetadataUpdate(uint256 _tokenId)
+    - event: OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+    - event: Paused(address account)
+    - event: Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+    - event: TransferWithIPFS(address indexed from, address indexed to, uint256 tokenid, string ipfsHash)
+    - event: Unpaused(address account)
+unordered_multichain_mode: true
+preload_handlers: true

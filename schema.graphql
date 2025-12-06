@@ -1,0 +1,88 @@
+type Reflection_Approval {
+  id: ID!
+  owner: String!
+  approved: String!
+  tokenId: BigInt!
+}
+
+type Reflection_ApprovalForAll {
+  id: ID!
+  owner: String!
+  operator: String!
+  approved: Boolean!
+}
+
+type Reflection_BatchMetadataUpdate {
+  id: ID!
+  _fromTokenId: BigInt!
+  _toTokenId: BigInt!
+}
+
+type Reflection_Initialized {
+  id: ID!
+  version: BigInt!
+}
+
+type Reflection_MetadataUpdate {
+  id: ID!
+  _tokenId: BigInt!
+}
+
+type Reflection_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type Reflection_Paused {
+  id: ID!
+  account: String!
+}
+
+type Reflection_Transfer {
+  id: ID!
+  from: String!
+  to: String!
+  tokenId: BigInt!
+}
+
+type Reflection_TransferWithIPFS {
+  id: ID!
+  from: String!
+  to: String!
+  tokenid: BigInt!
+  ipfsHash: String!
+}
+
+type Reflection_Unpaused {
+  id: ID!
+  account: String!
+}
+
+
+type Token @entity {
+  id: ID!            # tokenId
+  owner: String!
+  uri: String        # IPFS metadata URL
+  metadata: String   # raw metadata JSON
+  mintedAt: BigInt!
+  burned: Boolean!
+  image_url: String
+  name: String
+  description: String
+}
+
+
+type Owner @entity {
+  id: ID!            # wallet address
+  tokenCount: Int!
+}
+
+type TransferEvent @entity {
+  id: ID!
+  from: String!
+  to: String!
+  tokenId: BigInt!
+  timestamp: BigInt!
+}
+

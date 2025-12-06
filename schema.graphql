@@ -86,3 +86,16 @@ type TransferEvent @entity {
   timestamp: BigInt!
 }
 
+type Collection {
+  id: ID!
+  address: String!
+  chainId: BigInt!
+  name: String
+  symbol: String
+  totalSupply: Int!
+  activeSupply: Int!
+  uniqueOwners: Int!
+  itemCount: Int!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}

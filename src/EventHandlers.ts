@@ -85,15 +85,144 @@ Reflection.Paused.handler(async ({ event, context }) => {
 });
 
 Reflection.Transfer.handler(async ({ event, context }) => {
-  const entity: Reflection_Transfer = {
-    id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
-    from: event.params.from,
-    to: event.params.to,
-    tokenId: event.params.tokenId,
+  const tokenId = event.params.tokenId.toString();
+  const from = event.params.from.toLowerCase();
+  const to = event.params.to.toLowerCase();
+  const ZERO = "0x0000000000000000000000000000000000000000";
+  const timestamp = BigInt(event.block.timestamp);
+
+  const collectionId = `${event.chainId}:${event.srcAddress.toLowerCase()}`;
+  let collection = await context.Collection.get(collectionId);
+
+  // ------------------------------------------------------
+  // ALWAYS INITIALIZE COLLECTION SAFELY
+  // ------------------------------------------------------
+  if (!collection) {
+    collection = {
+      id: collectionId,
+      address: event.srcAddress.toLowerCase(),
+      chainId: BigInt(event.chainId),
+
+      // nullable string fields, can be undefined
+      name: undefined,
+      symbol: undefined,
+
+      totalSupply: 0,
+      activeSupply: 0,
+      uniqueOwners: 0,
+      itemCount: 0,
+
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+  }
+
+  // ------------------------------------------------------
+  // TOKEN HANDLING
+  // ------------------------------------------------------
+  let token = await context.Token.get(tokenId);
+
+  const isMint = from === ZERO && !token;
+  const isBurn = to === ZERO;
+
+  if (isMint) {
+    token = {
+      id: tokenId,
+      owner: to,
+      mintedAt: timestamp,
+      burned: false,
+      uri: undefined,
+      metadata: undefined,
+      image_url: undefined,
+      name: undefined,
+      description: undefined,
+    };
+
+    collection = {
+      ...collection,
+      totalSupply: collection.totalSupply + 1,
+      activeSupply: collection.activeSupply + 1,
+    };
+  }
+
+  if (token) {
+    if (isBurn) {
+      token = { ...token, burned: true };
+
+      collection = {
+        ...collection,
+        activeSupply: collection.activeSupply - 1,
+      };
+    } else {
+      token = { ...token, owner: to };
+    }
+
+    context.Token.set(token);
+  }
+
+  // ------------------------------------------------------
+  // OWNER HANDLING
+  // ------------------------------------------------------
+  let fromOwner = await context.Owner.get(from) || { id: from, tokenCount: 0 };
+  let toOwner = await context.Owner.get(to) || { id: to, tokenCount: 0 };
+
+  // FROM owner
+  if (!isMint && from !== ZERO) {
+    const newCount = fromOwner.tokenCount - 1;
+
+    if (newCount === 0) {
+      collection = {
+        ...collection,
+        uniqueOwners: collection.uniqueOwners - 1,
+      };
+    }
+
+    fromOwner = { ...fromOwner, tokenCount: newCount };
+  }
+
+  // TO owner
+  if (!isBurn) {
+    const firstOwned = toOwner.tokenCount === 0;
+
+    toOwner = {
+      ...toOwner,
+      tokenCount: toOwner.tokenCount + 1,
+    };
+
+    if (firstOwned) {
+      collection = {
+        ...collection,
+        uniqueOwners: collection.uniqueOwners + 1,
+      };
+    }
+  }
+
+  context.Owner.set(fromOwner);
+  context.Owner.set(toOwner);
+
+  // ------------------------------------------------------
+  // UPDATE COLLECTION TIMESTAMP
+  // ------------------------------------------------------
+  collection = {
+    ...collection,
+    updatedAt: timestamp,
   };
 
-  context.Reflection_Transfer.set(entity);
+  context.Collection.set(collection);
+
+  // ------------------------------------------------------
+  // LOG TRANSFER
+  // ------------------------------------------------------
+  context.TransferEvent.set({
+    id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
+    from,
+    to,
+    tokenId: event.params.tokenId,
+    timestamp,
+  });
 });
+
+
 
 Reflection.TransferWithIPFS.handler(async ({ event, context }) => {
   const tokenId = event.params.tokenid.toString();

@@ -136,6 +136,7 @@ Reflection.Transfer.handler(async ({ event, context }) => {
       image_url: undefined,
       name: undefined,
       description: undefined,
+      collection_id: collectionId,
     };
 
     collection = {
@@ -240,6 +241,7 @@ Reflection.TransferWithIPFS.handler(async ({ event, context }) => {
       image_url: "",
       name: "",
       description: "",
+      collection_id: `${event.chainId}:${event.srcAddress.toLowerCase()}`,
     };
   }
 
@@ -276,6 +278,7 @@ Reflection.TransferWithIPFS.handler(async ({ event, context }) => {
     image_url: imageUrl,
     name,
     description,
+    collection_id: token.collection_id,
   });
 });
 
